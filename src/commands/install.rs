@@ -1,5 +1,6 @@
 use super::command::Command;
 use super::r#use::Use;
+use super::default::Default;
 use crate::alias::create_alias;
 use crate::arch::get_safe_arch;
 use crate::config::FnmConfig;
@@ -38,6 +39,10 @@ pub struct Install {
     /// Use the installed version immediately after installation
     #[clap(long)]
     pub r#use: bool,
+
+    /// Set the installed version as the default version
+    #[clap(long)]
+    pub default: bool,
 }
 
 impl Install {
@@ -73,6 +78,7 @@ impl Command for Install {
         let current_dir = std::env::current_dir().unwrap();
         let show_progress = self.progress.enabled(config);
         let use_installed = self.r#use;
+        let set_default = self.default;
 
         let current_version = self
             .version()?
@@ -163,6 +169,20 @@ impl Command for Install {
             create_alias(config, "default", &version)?;
         }
 
+        if set_default {
+            outln!(
+                config,
+                Info,
+                "Setting {} as the default version",
+                version.v_str().cyan()
+            );
+            Default {
+                version: UserVersion::Full(version.clone()),
+            }
+            .apply(config)
+            .map_err(|source| Error::DefaultError { source })?;
+        }
+
         if let Some(tagged_alias) = current_version.inferred_alias() {
             tag_alias(config, &version, &tagged_alias)?;
         }
@@ -238,6 +258,8 @@ pub enum Error {
     UseError {
         source: Box<<Use as Command>::Error>,
     },
+    #[error(transparent)]
+    DefaultError { source: <Default as Command>::Error },
     #[error("Can't find version in dotfiles. Please provide a version manually to the command.")]
     CantInferVersion,
     #[error(transparent)]
@@ -275,6 +297,7 @@ mod tests {
             latest: false,
             progress: ProgressConfig::Never,
             r#use: false,
+            default: false,
         }
         .apply(&config)
         .expect("Can't install");
@@ -302,6 +325,7 @@ mod tests {
             latest: true,
             progress: ProgressConfig::Never,
             r#use: false,
+            default: false,
         }
         .apply(&config)
         .expect("Can't install");
