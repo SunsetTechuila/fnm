@@ -120,7 +120,9 @@ fn get_version_from_package_json(
     if resolve_dev_engines {
         range = pkg_json.dev_node_range().cloned();
         if range.is_some() {
-            info!("Found package.json with Node version range {range:?} in devEngines.runtime field");
+            info!(
+                "Found package.json with Node version range {range:?} in devEngines.runtime field"
+            );
         } else {
             info!("No Node version range found in package.json devEngines.runtime field");
         }
