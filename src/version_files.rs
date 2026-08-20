@@ -86,11 +86,11 @@ pub fn get_user_version_for_file(
     ) {
         (_, true, false, false) => None,
         (Err(err), _, _, _) => {
-            info!("Can't read file: {}", err);
+            info!("Can't read file: {err}");
             None
         }
         (Ok(version), false, _, _) => {
-            info!("Found string {:?} in version file", version);
+            info!("Found string {version:?} in version file");
             UserVersion::from_str(version.trim()).ok()
         }
         (Ok(pkg_json), true, resolve_dev_engines, resolve_engines) => {
@@ -111,7 +111,7 @@ fn get_version_from_package_json(
     let pkg_json = match serde_json::from_str::<PackageJson>(pkg_json) {
         Ok(parsed) => parsed,
         Err(err) => {
-            debug!("Failed to parse package.json: {}", err);
+            debug!("Failed to parse package.json: {err}");
             return None;
         }
     };
@@ -120,10 +120,7 @@ fn get_version_from_package_json(
     if resolve_dev_engines {
         range = pkg_json.dev_node_range().cloned();
         if range.is_some() {
-            info!(
-                "Found package.json with Node version range {:?} in devEngines.runtime field",
-                range
-            );
+            info!("Found package.json with Node version range {range:?} in devEngines.runtime field");
         } else {
             info!("No Node version range found in package.json devEngines.runtime field");
         }
@@ -131,7 +128,7 @@ fn get_version_from_package_json(
     if resolve_engines && range.is_none() {
         range = pkg_json.node_range().cloned();
         if range.is_some() {
-            info!("Found package.json with {:?} in engines.node field", range);
+            info!("Found package.json with {range:?} in engines.node field");
         } else {
             info!("No engines.node range found in package.json");
         }
